@@ -1,0 +1,48 @@
+version: '3.8'
+
+services:
+  # PostgreSQL Database
+  postgres:
+    image: postgres:15-alpine
+    container_name: department_db_dev
+    environment:
+      POSTGRES_DB: department_db
+      POSTGRES_USER: postgres
+      POSTGRES_PASSWORD: password
+    ports:
+      - "5432:5432"
+    volumes:
+      - postgres_data_dev:/var/lib/postgresql/data
+    networks:
+      - department_network_dev
+
+  # Spring Boot Backend (Development)
+  backend:
+    build: 
+      context: ./backend
+      dockerfile: Dockerfile
+    container_name: department_backend_dev
+    environment:
+      DATABASE_URL: jdbc:postgresql://postgres:5432/department_db
+      DATABASE_USERNAME: postgres
+      DATABASE_PASSWORD: password
+      SERVER_PORT: 8080
+      SPRING_PROFILES_ACTIVE: dev
+    ports:
+      - "8080:8080"
+    depends_on:
+      - postgres
+    networks:
+      - department_network_dev
+    volumes:
+      - ./backend:/app
+      - /app/target
+    command: ["./mvnw", "spring-boot:run"]
+
+volumes:
+  postgres_data_dev:
+
+networks:
+  department_network_dev:
+    driver: bridge
+
